@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del /F \"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\java\\\\com\\\\example\\\\demo\\\\SpringBootRepasoApplication.java\")",
+      "Bash(del /F \"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\test\\\\java\\\\com\\\\example\\\\demo\\\\SpringBootRepasoApplicationTests.java\")",
+      "Bash(cmd /c \"del /F \"\"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\java\\\\com\\\\example\\\\demo\\\\SpringBootRepasoApplication.java\"\" && del /F \"\"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\test\\\\java\\\\com\\\\example\\\\demo\\\\SpringBootRepasoApplicationTests.java\"\"\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\java\\\\com\\\\salesianos\\\\bibliobox\\\\entity\\\\Alumno.java\")",
+      "Bash(powershell.exe -Command \"Test-Path 'C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso'\":*)",
+      "Bash(powershell.exe -Command:*)",
+      "Bash(python3:*)",
+      "Bash(powershell.exe -NoProfile -Command \"Set-Content -Path ''C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\_test.py'' -Value ''print\\(\"\"ok\"\"\\)'' -Encoding utf8; python ''C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\_test.py''\")",
+      "Bash(New-Item -ItemType File -Path \"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\resources\\\\templates\\\\layout.html\" -Force)",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"created\")",
+      "Bash(printf:*)",
+      "Bash(dir:*)",
+      "Bash(cmd /c echo:*)",
+      "Bash(cmd /c \"mkdir C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\resources\\\\templates 2>nul & echo. > C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\resources\\\\templates\\\\layout.html\")",
+      "Bash(cmd /c dir \"C:\\\\Users\\\\ivanl\\\\eclipse-workspace\\\\SpringBoot_Repaso\\\\src\\\\main\\\\resources\\\\templates\")",
+      "Bash(cmd /c dir:*)",
+      "Bash(cmd /c \"dir /b\")",
+      "Bash(cmd /c \"dir /b & echo EXIT_CODE=%errorlevel%\")",
+      "Bash(powershell -Command:*)"
+    ]
+  }
+}
