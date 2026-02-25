@@ -1,6 +1,6 @@
 # =====================================================================
 # CD Workflow - BiblioBox
-# Empaqueta el WAR y crea releases.
+# Empaqueta el JAR ejecutable y crea releases.
 # Trigger: ejecución manual (workflow_dispatch) o PR merged a main
 # =====================================================================
 name: CD - Despliegue y Empaquetado
@@ -46,37 +46,37 @@ jobs:
       - name: Ejecutar tests de verificación
         run: mvn test --no-transfer-progress
 
-      # Paso 4: Empaquetar el proyecto en formato WAR
+      # Paso 4: Empaquetar el proyecto en formato JAR ejecutable
       # -DskipTests: los tests ya se ejecutaron en el paso anterior
-      - name: Empaquetar proyecto en WAR
+      - name: Empaquetar proyecto en JAR
         run: mvn clean package -DskipTests --no-transfer-progress
 
-      # Paso 5: Verificar que el archivo WAR fue generado correctamente
-      - name: Verificar generación del artefacto WAR
+      # Paso 5: Verificar que el archivo JAR fue generado correctamente
+      - name: Verificar generacion del artefacto JAR
         run: |
           echo "Archivos generados en target/:"
-          ls -lh target/*.war
-          echo "Verificación completada exitosamente"
+          ls -lh target/*.jar
+          echo "Verificacion completada exitosamente"
 
-      # Paso 6: Subir el WAR como artefacto de GitHub Actions
-      # (disponible para descarga durante 30 días)
-      - name: Subir artefacto WAR
+      # Paso 6: Subir el JAR como artefacto de GitHub Actions
+      # (disponible para descarga durante 30 dias)
+      - name: Subir artefacto JAR
         uses: actions/upload-artifact@v4
         with:
-          name: bibliobox-war
-          path: target/*.war
+          name: bibliobox-jar
+          path: target/*.jar
           retention-days: 30
 
-      # Paso 7: Crear Release en GitHub (solo en ejecución manual con entorno producción)
+      # Paso 7: Crear Release en GitHub (solo en ejecucion manual con entorno produccion)
       - name: Crear Release en GitHub
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
         uses: softprops/action-gh-release@v2
         with:
-          # Tag dinámico basado en la fecha de ejecución
+          # Tag dinamico basado en el numero de ejecucion
           tag_name: v${{ github.run_number }}-${{ github.event.inputs.environment }}
           name: BiblioBox Release ${{ github.run_number }}
           body: |
-            ## BiblioBox - Release Automático
+            ## BiblioBox - Release Automatico
 
             **Entorno:** ${{ github.event.inputs.environment }}
             **Build:** #${{ github.run_number }}
@@ -84,13 +84,13 @@ jobs:
             **Fecha:** ${{ github.event.repository.updated_at }}
 
             ### Cambios incluidos
-            Ver commits desde la última release para detalles de cambios.
+            Ver commits desde la ultima release para detalles de cambios.
 
             ### Instrucciones de despliegue
-            1. Descargar el archivo WAR adjunto
-            2. Copiar a directorio webapps del servidor de aplicaciones
-            3. Reiniciar el servidor si es necesario
-          files: target/*.war
+            1. Descargar el archivo JAR adjunto
+            2. Ejecutar: java -jar bibliobox-*.jar
+            3. La aplicacion arranca en http://localhost:8080
+          files: target/*.jar
           draft: false
           prerelease: ${{ github.event.inputs.environment != 'production' }}
         env:
