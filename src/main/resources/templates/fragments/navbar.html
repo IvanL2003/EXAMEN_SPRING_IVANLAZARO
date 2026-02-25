@@ -1,0 +1,42 @@
+<!--
+    FRAGMENT: navbar reutilizable
+    ─────────────────────────────
+    Incluido en el layout con: <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+    Este fragment contiene SOLO el elemento <nav> para evitar HTML duplicado.
+-->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container">
+        <!-- Logo / nombre de la app → vuelve al inicio (redirect a /alumnos) -->
+        <a class="navbar-brand fw-bold" th:href="@{/}">
+            📚 BiblioBox
+        </a>
+
+        <!-- Botón hamburguesa para pantallas pequeñas (colapsa el menú) -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Menú de navegación colapsable -->
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav ms-auto">
+
+                <!-- Alumnos -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/alumnos}">Alumnos</a>
+                </li>
+
+                <!-- Préstamos -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/prestamos}">Préstamos</a>
+                </li>
+
+                <!-- KPI Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/kpi}">KPI</a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>

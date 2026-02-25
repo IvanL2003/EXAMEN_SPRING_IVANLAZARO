@@ -1,0 +1,91 @@
+<!--
+    PÁGINA HIJA: formulario de préstamo (crear y editar)
+-->
+<html th:replace="~{layout :: layout(~{::content}, ~{::title}, _)}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${prestamo.id != null ? 'Editar Préstamo' : 'Nuevo Préstamo'} + ' - BiblioBox'">Préstamo - BiblioBox</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+<div class="container">
+    <div class="col-md-6 mx-auto">
+        <h2 th:text="${prestamo.id != null ? 'Editar Préstamo' : 'Nuevo Préstamo'}"></h2>
+
+        <!--
+            FORMULARIO MVC:
+            - th:action: URL dinámica según si es creación o edición
+            - th:object: vincula el objeto "prestamo" del modelo a los campos
+            - method="post": siempre POST en formularios de creación/edición
+        -->
+        <form th:action="${prestamo.id != null ? '/prestamos/edit/' + prestamo.id : '/prestamos'}"
+              th:object="${prestamo}" method="post" class="card p-4 bg-white">
+
+            <!-- SELECTOR DE ALUMNO:
+                 name="alumnoId" → el controlador recibe un @RequestParam Long alumnoId
+                 (NO th:field, porque alumno es un objeto, no un campo simple) -->
+            <div class="mb-3">
+                <label class="form-label">Alumno *</label>
+                <select name="alumnoId" class="form-select">
+                    <option value="">-- Seleccionar alumno --</option>
+                    <!-- th:each itera la lista "alumnos" enviada por el controlador -->
+                    <!-- th:selected marca la opción correcta al editar -->
+                    <option th:each="alumno : ${alumnos}"
+                            th:value="${alumno.id}"
+                            th:text="${alumno.nombre + ' (' + alumno.curso + ')'}"
+                            th:selected="${prestamo.alumno != null && prestamo.alumno.id == alumno.id}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- th:field="*{tituloLibro}" enlaza el campo al atributo del objeto prestamo -->
+            <!-- th:classappend añade 'is-invalid' si hay error de validación en ese campo -->
+            <div class="mb-3">
+                <label class="form-label">Título del Libro *</label>
+                <input type="text" th:field="*{tituloLibro}" class="form-control"
+                       th:classappend="${#fields.hasErrors('tituloLibro')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{tituloLibro}"></div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Fecha de Préstamo *</label>
+                <input type="date" th:field="*{fechaPrestamo}" class="form-control"
+                       th:classappend="${#fields.hasErrors('fechaPrestamo')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{fechaPrestamo}"></div>
+            </div>
+
+            <!-- Checkbox booleano: th:field gestiona el checked automáticamente -->
+            <div class="mb-3 form-check">
+                <input type="checkbox" th:field="*{devuelto}" class="form-check-input">
+                <label class="form-check-label">¿Devuelto?</label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Fecha de Devolución</label>
+                <input type="date" th:field="*{fechaDevolucion}" class="form-control"
+                       th:classappend="${#fields.hasErrors('fechaDevolucion')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{fechaDevolucion}"></div>
+                <small class="text-muted">Obligatoria si está devuelto. Debe ser igual o posterior al préstamo.</small>
+            </div>
+
+            <!-- ERRORES DE @AssertTrue:
+                 Los métodos isDevueltoTieneFechaDevolucion() e isFechaDevolucionValida()
+                 de la entidad Prestamo generan violaciones en estas propiedades.
+                 Se muestran con th:if + th:errors igual que los campos normales. -->
+            <div th:if="${#fields.hasErrors('devueltoTieneFechaDevolucion')}" class="text-danger small mb-2"
+                 th:errors="*{devueltoTieneFechaDevolucion}"></div>
+            <div th:if="${#fields.hasErrors('fechaDevolucionValida')}" class="text-danger small mb-2"
+                 th:errors="*{fechaDevolucionValida}"></div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a th:href="@{/prestamos}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+</th:block>
+
+</body>
+</html>

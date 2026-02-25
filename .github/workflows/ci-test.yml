@@ -1,0 +1,53 @@
+# =====================================================================
+# CI Workflow - BiblioBox
+# Ejecuta compilación y tests en cada push y pull request a main/develop
+# =====================================================================
+name: CI - Compilar y Ejecutar Tests
+
+# Trigger: se ejecuta en push y PR a las ramas principales
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-test:
+    name: Compilar y Testear
+    # Ejecutar en Ubuntu (más rápido y estable que Windows)
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Clonar el repositorio con todo su historial
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      # Paso 2: Configurar el entorno Java 21 (versión especificada en el proyecto)
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'     # OpenJDK de Adoptium (gratuito y estable)
+          cache: maven                # Cache de dependencias Maven para acelerar builds
+
+      # Paso 3: Compilar el proyecto sin ejecutar tests (verificación rápida de sintaxis)
+      - name: Compilar el proyecto con Maven
+        run: mvn clean compile --no-transfer-progress
+
+      # Paso 4: Ejecutar todos los tests (unitarios, integración y E2E)
+      - name: Ejecutar tests con Maven
+        run: mvn test --no-transfer-progress
+
+      # Paso 5: Publicar resultados de los tests para visualización en GitHub
+      - name: Publicar resultados de tests
+        uses: dorny/test-reporter@v1
+        if: always()    # Ejecutar incluso si los tests fallan
+        with:
+          name: Resultados JUnit
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: false

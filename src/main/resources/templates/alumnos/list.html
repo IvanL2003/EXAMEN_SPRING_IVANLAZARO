@@ -1,0 +1,77 @@
+<!--
+    PÁGINA HIJA: lista de alumnos
+    Solo define el contenido. El layout pone el <head>, navbar y scripts.
+-->
+<html th:replace="~{layout :: layout(~{::content}, ~{::title}, _)}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Alumnos - BiblioBox</title>
+</head>
+<body>
+<th:block th:fragment="content">
+<div class="container">
+
+    <!-- FLASH MESSAGES: el controlador los añade con redirectAttributes.addFlashAttribute() -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-people-fill me-2"></i>Alumnos</h2>
+        <a th:href="@{/alumnos/new}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo alumno
+        </a>
+    </div>
+
+    <!-- th:each itera la lista "alumnos" que el controlador pone en el Model -->
+    <table class="table table-bordered table-hover bg-white">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Curso</th>
+                <th>Email</th>
+                <th>Préstamos</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(alumnos)}">
+                <td colspan="6" class="text-center text-muted py-3">No hay alumnos registrados.</td>
+            </tr>
+            <!-- th:each itera la lista enviada por el controlador -->
+            <tr th:each="alumno : ${alumnos}">
+                <td th:text="${alumno.id}"></td>
+                <!-- @{/alumnos/{id}(id=${alumno.id})} construye la URL /alumnos/3 -->
+                <td><a th:href="@{/alumnos/{id}(id=${alumno.id})}" th:text="${alumno.nombre}"></a></td>
+                <td><span class="badge bg-primary" th:text="${alumno.curso}"></span></td>
+                <!-- ?: operador Elvis de Thymeleaf: muestra '-' si el campo es null -->
+                <td th:text="${alumno.email ?: '-'}"></td>
+                <!-- #lists.size() cuenta la lista de préstamos (relación @OneToMany) -->
+                <td th:text="${#lists.size(alumno.prestamos)}"></td>
+                <td>
+                    <a th:href="@{/alumnos/{id}(id=${alumno.id})}"        class="btn btn-sm btn-info">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a th:href="@{/alumnos/edit/{id}(id=${alumno.id})}"   class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a th:href="@{/alumnos/delete/{id}(id=${alumno.id})}" class="btn btn-sm btn-danger"
+                       onclick="return confirm('¿Eliminar este alumno y todos sus préstamos?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!--
+    PÁGINA HIJA: KPI Dashboard con gráficos Chart.js
+    Solo usa los 4 endpoints que existen en KPIRestController:
+      - GET /api/kpi/alumnos-por-curso     → [{ curso, total }]
+      - GET /api/kpi/prestamos-por-estado  → [{ devueltos, pendientes }]  un solo objeto
+      - GET /api/kpi/prestamos-por-mes     → [{ mes, total }]
+      - GET /api/kpi/top-alumnos           → [{ nombre, totalPrestamos }]
+-->
+<html th:replace="~{layout :: layout(~{::content}, ~{::title}, ~{::scripts})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>KPI Dashboard - BiblioBox</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+<div class="container py-4">
+    <h2 class="mb-4"><i class="bi bi-bar-chart-fill me-2"></i>Dashboard KPI</h2>
+
+    <!-- ===================== SECCIÓN 1: Alumnos por curso ===================== -->
+    <h4 class="mt-4 mb-3 text-primary"><i class="bi bi-people-fill me-2"></i>Alumnos por curso</h4>
+    <div class="row g-4 mb-4">
+
+        <!-- Gráfico 1a: Alumnos por curso (Bar vertical) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Barras verticales</h5>
+                    <canvas id="chartAlumnosCursoBar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 1b: Alumnos por curso (Doughnut) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Dona (Doughnut)</h5>
+                    <canvas id="chartAlumnosCursoDoughnut" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 1c: Alumnos por curso (PolarArea) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Área polar</h5>
+                    <canvas id="chartAlumnosCursoPolar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===================== SECCIÓN 2: Préstamos por estado ===================== -->
+    <h4 class="mt-2 mb-3 text-success"><i class="bi bi-bookmark-check-fill me-2"></i>Préstamos por estado</h4>
+    <div class="row g-4 mb-4">
+
+        <!-- Gráfico 2a: Préstamos por estado (Pie) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Tarta (Pie)</h5>
+                    <canvas id="chartPrestamosEstadoPie" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 2b: Préstamos por estado (Doughnut) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Dona (Doughnut)</h5>
+                    <canvas id="chartPrestamosEstadoDoughnut" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 2c: Préstamos por estado (Barras horizontales) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Barras horizontales</h5>
+                    <canvas id="chartPrestamosEstadoHBar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===================== SECCIÓN 3: Préstamos por mes ===================== -->
+    <h4 class="mt-2 mb-3 text-purple" style="color:#6610f2"><i class="bi bi-calendar3 me-2"></i>Préstamos por mes</h4>
+    <div class="row g-4 mb-4">
+
+        <!-- Gráfico 3a: Préstamos por mes (Bar) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Barras verticales</h5>
+                    <canvas id="chartPrestamosMesBar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 3b: Préstamos por mes (Line) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Línea (Line)</h5>
+                    <canvas id="chartPrestamosMesLine" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 3c: Préstamos por mes (Barras horizontales) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Barras horizontales</h5>
+                    <canvas id="chartPrestamosMesHBar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===================== SECCIÓN 4: Top 5 alumnos ===================== -->
+    <h4 class="mt-2 mb-3 text-warning"><i class="bi bi-trophy-fill me-2"></i>Top 5 alumnos con más préstamos</h4>
+    <div class="row g-4 mb-4">
+
+        <!-- Gráfico 4a: Top alumnos (Radar) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Radar</h5>
+                    <canvas id="chartTopAlumnosRadar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 4b: Top alumnos (Bar vertical) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Barras verticales</h5>
+                    <canvas id="chartTopAlumnosBar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 4c: Top alumnos (Barras horizontales) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Barras horizontales</h5>
+                    <canvas id="chartTopAlumnosHBar" style="max-height:280px"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</th:block>
+
+<th:block th:fragment="scripts">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+
+/* ── utilidad ── */
+async function fetchJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' en ' + url);
+    return res.json();
+}
+
+const PALETTE = ['#0d6efd','#6610f2','#198754','#ffc107','#dc3545',
+                 '#0dcaf0','#fd7e14','#6f42c1','#20c997','#d63384'];
+
+/* ══════════════════════════════════════════════════════
+   SECCIÓN 1 – Alumnos por curso
+   Endpoint: GET /api/kpi/alumnos-por-curso
+   Formato:  [{ curso, total }]
+   ══════════════════════════════════════════════════════ */
+async function renderAlumnosCurso() {
+    const data   = await fetchJson('/api/kpi/alumnos-por-curso');
+    const labels = data.map(d => d.curso);
+    const values = data.map(d => Number(d.total));
+    const colors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+
+    /* 1a – Bar vertical */
+    new Chart(document.getElementById('chartAlumnosCursoBar'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Alumnos', data: values, backgroundColor: '#0d6efd' }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    /* 1b – Doughnut */
+    new Chart(document.getElementById('chartAlumnosCursoDoughnut'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    /* 1c – PolarArea */
+    new Chart(document.getElementById('chartAlumnosCursoPolar'), {
+        type: 'polarArea',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors.map(c => c + 'cc') }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   SECCIÓN 2 – Préstamos por estado
+   Endpoint: GET /api/kpi/prestamos-por-estado
+   Formato:  [{ devueltos, pendientes }]  — un solo objeto
+   ══════════════════════════════════════════════════════ */
+async function renderPrestamosEstado() {
+    const data       = await fetchJson('/api/kpi/prestamos-por-estado');
+    const stats      = data[0];
+    const devueltos  = Number(stats.devueltos  || 0);
+    const pendientes = Number(stats.pendientes || 0);
+    const estadoLabels = ['Devueltos', 'Pendientes'];
+    const estadoValues = [devueltos, pendientes];
+    const estadoColors = ['#198754', '#ffc107'];
+
+    /* 2a – Pie */
+    new Chart(document.getElementById('chartPrestamosEstadoPie'), {
+        type: 'pie',
+        data: { labels: estadoLabels, datasets: [{ data: estadoValues, backgroundColor: estadoColors }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    /* 2b – Doughnut */
+    new Chart(document.getElementById('chartPrestamosEstadoDoughnut'), {
+        type: 'doughnut',
+        data: { labels: estadoLabels, datasets: [{ data: estadoValues, backgroundColor: estadoColors }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    /* 2c – Barras horizontales (indexAxis: 'y') */
+    new Chart(document.getElementById('chartPrestamosEstadoHBar'), {
+        type: 'bar',
+        data: { labels: estadoLabels, datasets: [{ label: 'Préstamos', data: estadoValues, backgroundColor: estadoColors }] },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   SECCIÓN 3 – Préstamos por mes
+   Endpoint: GET /api/kpi/prestamos-por-mes
+   Formato:  [{ mes (1-12), total }]
+   ══════════════════════════════════════════════════════ */
+async function renderPrestamosMes() {
+    const data   = await fetchJson('/api/kpi/prestamos-por-mes');
+    const meses  = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const labels = data.map(d => meses[Number(d.mes)] || d.mes);
+    const values = data.map(d => Number(d.total));
+
+    /* 3a – Bar vertical */
+    new Chart(document.getElementById('chartPrestamosMesBar'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Préstamos', data: values, backgroundColor: '#6610f2' }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    /* 3b – Line */
+    new Chart(document.getElementById('chartPrestamosMesLine'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Préstamos',
+                data: values,
+                borderColor: '#6610f2',
+                backgroundColor: 'rgba(102,16,242,0.15)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: '#6610f2'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    /* 3c – Barras horizontales */
+    new Chart(document.getElementById('chartPrestamosMesHBar'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Préstamos', data: values, backgroundColor: '#6610f2' }] },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   SECCIÓN 4 – Top 5 alumnos con más préstamos
+   Endpoint: GET /api/kpi/top-alumnos
+   Formato:  [{ nombre, totalPrestamos }]
+   ══════════════════════════════════════════════════════ */
+async function renderTopAlumnos() {
+    const data   = await fetchJson('/api/kpi/top-alumnos');
+    const labels = data.map(d => d.nombre);
+    const values = data.map(d => Number(d.totalPrestamos || d.total || 0));
+    const colors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+
+    /* 4a – Radar */
+    new Chart(document.getElementById('chartTopAlumnosRadar'), {
+        type: 'radar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Préstamos',
+                data: values,
+                backgroundColor: 'rgba(13,110,253,0.2)',
+                borderColor: '#0d6efd',
+                pointBackgroundColor: '#0d6efd'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { r: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    /* 4b – Bar vertical */
+    new Chart(document.getElementById('chartTopAlumnosBar'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Préstamos', data: values, backgroundColor: colors }] },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    /* 4c – Barras horizontales */
+    new Chart(document.getElementById('chartTopAlumnosHBar'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Préstamos', data: values, backgroundColor: colors }] },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+}
+
+/* ── Lanzar todos los gráficos; un fallo individual no corta los demás ── */
+Promise.allSettled([
+    renderAlumnosCurso(),
+    renderPrestamosEstado(),
+    renderPrestamosMes(),
+    renderTopAlumnos()
+]).then(results => {
+    results.forEach((r, i) => {
+        if (r.status === 'rejected') {
+            console.error('Error en sección ' + (i + 1) + ':', r.reason);
+        }
+    });
+});
+
+</script>
+</th:block>
+
+</body>
+</html>

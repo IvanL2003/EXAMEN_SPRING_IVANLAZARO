@@ -1,0 +1,97 @@
+# =====================================================================
+# CD Workflow - BiblioBox
+# Empaqueta el WAR y crea releases.
+# Trigger: ejecución manual (workflow_dispatch) o PR merged a main
+# =====================================================================
+name: CD - Despliegue y Empaquetado
+
+# Trigger: manual o cuando se hace merge de un PR a main
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno destino del despliegue'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+  pull_request:
+    # Se ejecuta al abrir, sincronizar o mergear una PR contra main
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Empaquetar y Desplegar
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+
+    steps:
+      # Paso 1: Clonar el repositorio
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      # Paso 2: Configurar Java 21 con cache de Maven
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # Paso 3: Ejecutar todos los tests antes del empaquetado
+      # (nunca desplegar código que no pasa los tests)
+      - name: Ejecutar tests de verificación
+        run: mvn test --no-transfer-progress
+
+      # Paso 4: Empaquetar el proyecto en formato WAR
+      # -DskipTests: los tests ya se ejecutaron en el paso anterior
+      - name: Empaquetar proyecto en WAR
+        run: mvn clean package -DskipTests --no-transfer-progress
+
+      # Paso 5: Verificar que el archivo WAR fue generado correctamente
+      - name: Verificar generación del artefacto WAR
+        run: |
+          echo "Archivos generados en target/:"
+          ls -lh target/*.war
+          echo "Verificación completada exitosamente"
+
+      # Paso 6: Subir el WAR como artefacto de GitHub Actions
+      # (disponible para descarga durante 30 días)
+      - name: Subir artefacto WAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: bibliobox-war
+          path: target/*.war
+          retention-days: 30
+
+      # Paso 7: Crear Release en GitHub (solo en ejecución manual con entorno producción)
+      - name: Crear Release en GitHub
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+        uses: softprops/action-gh-release@v2
+        with:
+          # Tag dinámico basado en la fecha de ejecución
+          tag_name: v${{ github.run_number }}-${{ github.event.inputs.environment }}
+          name: BiblioBox Release ${{ github.run_number }}
+          body: |
+            ## BiblioBox - Release Automático
+
+            **Entorno:** ${{ github.event.inputs.environment }}
+            **Build:** #${{ github.run_number }}
+            **Commit:** ${{ github.sha }}
+            **Fecha:** ${{ github.event.repository.updated_at }}
+
+            ### Cambios incluidos
+            Ver commits desde la última release para detalles de cambios.
+
+            ### Instrucciones de despliegue
+            1. Descargar el archivo WAR adjunto
+            2. Copiar a directorio webapps del servidor de aplicaciones
+            3. Reiniciar el servidor si es necesario
+          files: target/*.war
+          draft: false
+          prerelease: ${{ github.event.inputs.environment != 'production' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

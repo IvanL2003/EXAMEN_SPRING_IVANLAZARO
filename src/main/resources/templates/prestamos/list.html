@@ -1,0 +1,86 @@
+<!--
+    PÁGINA HIJA: lista de préstamos
+-->
+<html th:replace="~{layout :: layout(~{::content}, ~{::title}, _)}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Préstamos - BiblioBox</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+<div class="container">
+
+    <!-- FLASH MESSAGES: el controlador los añade con redirectAttributes.addFlashAttribute(...) -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-book-fill me-2"></i>Préstamos</h2>
+        <a th:href="@{/prestamos/new}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover bg-white">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Libro</th>
+                <th>Alumno</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Devolución</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(prestamos)}">
+                <td colspan="7" class="text-center text-muted py-3">No hay préstamos.</td>
+            </tr>
+            <!-- th:each itera la lista "prestamos" enviada por el controlador -->
+            <tr th:each="prestamo : ${prestamos}">
+                <!-- Enlace al detalle del préstamo -->
+                <td><a th:href="@{/prestamos/{id}(id=${prestamo.id})}" th:text="${prestamo.id}"></a></td>
+                <td th:text="${prestamo.tituloLibro}"></td>
+                <!-- Enlace al detalle del alumno (accedemos a campo del objeto relacionado) -->
+                <td>
+                    <a th:href="@{/alumnos/{id}(id=${prestamo.alumno.id})}"
+                       th:text="${prestamo.alumno.nombre}"></a>
+                </td>
+                <td th:text="${prestamo.fechaPrestamo}"></td>
+                <td>
+                    <!-- th:if / th:unless muestran uno u otro badge según el booleano -->
+                    <span th:if="${prestamo.devuelto}"     class="badge bg-success">Devuelto</span>
+                    <span th:unless="${prestamo.devuelto}" class="badge bg-warning text-dark">Pendiente</span>
+                </td>
+                <!-- ?: operador Elvis de Thymeleaf: si null muestra '-' -->
+                <td th:text="${prestamo.fechaDevolucion != null ? prestamo.fechaDevolucion : '-'}"></td>
+                <td>
+                    <a th:href="@{/prestamos/{id}(id=${prestamo.id})}"       class="btn btn-sm btn-info">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a th:href="@{/prestamos/edit/{id}(id=${prestamo.id})}"  class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a th:href="@{/prestamos/delete/{id}(id=${prestamo.id})}" class="btn btn-sm btn-danger"
+                       onclick="return confirm('¿Eliminar?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</th:block>
+
+</body>
+</html>

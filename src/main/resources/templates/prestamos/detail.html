@@ -1,0 +1,62 @@
+<!--
+    PÁGINA HIJA: detalle de un préstamo
+-->
+<html th:replace="~{layout :: layout(~{::content}, ~{::title}, _)}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detalle Préstamo - BiblioBox</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+<div class="container">
+    <div class="card col-md-7 mx-auto">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-book me-2"></i>Detalle del Préstamo
+            </h4>
+            <div>
+                <a th:href="@{/prestamos/edit/{id}(id=${prestamo.id})}" class="btn btn-sm btn-warning me-1">
+                    <i class="bi bi-pencil me-1"></i>Editar
+                </a>
+                <a th:href="@{/prestamos}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">ID</dt>
+                <dd class="col-sm-8" th:text="${prestamo.id}"></dd>
+
+                <dt class="col-sm-4">Libro</dt>
+                <dd class="col-sm-8" th:text="${prestamo.tituloLibro}"></dd>
+
+                <dt class="col-sm-4">Alumno</dt>
+                <dd class="col-sm-8">
+                    <!-- Enlace al detalle del alumno que tiene el préstamo -->
+                    <a th:href="@{/alumnos/{id}(id=${prestamo.alumno.id})}"
+                       th:text="${prestamo.alumno.nombre + ' (' + prestamo.alumno.curso + ')'}"></a>
+                </dd>
+
+                <dt class="col-sm-4">Fecha Préstamo</dt>
+                <dd class="col-sm-8" th:text="${prestamo.fechaPrestamo}"></dd>
+
+                <dt class="col-sm-4">Estado</dt>
+                <dd class="col-sm-8">
+                    <!-- th:if / th:unless para mostrar el badge correcto según devuelto -->
+                    <span th:if="${prestamo.devuelto}"     class="badge bg-success fs-6">Devuelto</span>
+                    <span th:unless="${prestamo.devuelto}" class="badge bg-warning text-dark fs-6">Pendiente</span>
+                </dd>
+
+                <dt class="col-sm-4">Fecha Devolución</dt>
+                <dd class="col-sm-8"
+                    th:text="${prestamo.fechaDevolucion != null ? prestamo.fechaDevolucion : 'Sin fecha'}"></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+</th:block>
+
+</body>
+</html>

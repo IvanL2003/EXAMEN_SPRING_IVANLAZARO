@@ -1,0 +1,170 @@
+<!--
+    PÁGINA HIJA: formulario de alumno (crear y editar)
+    El mismo formulario sirve para crear (alumno.id == null) y editar (alumno.id != null).
+    th:replace delega todo el HTML base al layout maestro.
+-->
+<html th:replace="~{layout :: layout(~{::content}, ~{::title}, ~{::scripts})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${alumno.id != null ? 'Editar Alumno' : 'Nuevo Alumno'} + ' - BiblioBox'">Alumno - BiblioBox</title>
+</head>
+<body>
+
+<th:block th:fragment="content">
+<div class="container">
+    <div class="col-md-6 mx-auto">
+        <h2 th:text="${alumno.id != null ? 'Editar Alumno' : 'Nuevo Alumno'}"></h2>
+
+        <!--
+            FORMULARIO MVC:
+            - th:action: si el alumno tiene id → editar, si no → crear
+            - th:object: vincula el objeto "alumno" del modelo a los campos del form
+            - method="post": siempre POST en formularios de creación/edición
+        -->
+        <form th:action="${alumno.id != null ? '/alumnos/edit/' + alumno.id : '/alumnos'}"
+              th:object="${alumno}" method="post" class="card p-4 bg-white">
+
+            <!-- th:field="*{nombre}" enlaza el campo al atributo "nombre" del objeto alumno -->
+            <!-- th:classappend añade 'is-invalid' si hay errores de validación en ese campo -->
+            <div class="mb-3">
+                <label class="form-label">Nombre *</label>
+                <input type="text" th:field="*{nombre}" class="form-control"
+                       th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'">
+                <!-- th:errors muestra el mensaje de validación del campo -->
+                <div class="invalid-feedback" th:errors="*{nombre}"></div>
+            </div>
+
+            <!-- CAMPO CURSO: input hidden + botones visuales -->
+            <div class="mb-3">
+                <label class="form-label">Curso *</label>
+                <!-- El valor real que se envía al servidor va en este hidden -->
+                <input type="hidden" id="curso" th:field="*{curso}">
+
+                <!-- Paso 1: elegir número de curso -->
+                <div class="mb-2">
+                    <small class="text-muted">Número:</small>
+                    <div class="d-flex flex-wrap gap-2 mt-1">
+                        <button type="button" class="btn btn-outline-primary curso-num-btn" data-num="1ºESO-">1ºESO</button>
+                        <button type="button" class="btn btn-outline-primary curso-num-btn" data-num="2ºESO-">2ºESO</button>
+                        <button type="button" class="btn btn-outline-primary curso-num-btn" data-num="3ºESO-">3ºESO</button>
+                        <button type="button" class="btn btn-outline-primary curso-num-btn" data-num="4ºESO-">4ºESO</button>
+                        <button type="button" class="btn btn-outline-warning curso-num-btn" data-num="1ºBach-">1ºBach</button>
+                        <button type="button" class="btn btn-outline-warning curso-num-btn" data-num="2ºBach-">2ºBach</button>
+                        <button type="button" class="btn btn-outline-secondary curso-num-btn" data-num="OTRO">Otro...</button>
+                    </div>
+                </div>
+
+                <!-- Paso 2: elegir letra (aparece al pulsar un número) -->
+                <div class="d-none mb-2" id="letraPanel">
+                    <small class="text-muted">Letra:</small>
+                    <div class="d-flex gap-2 mt-1">
+                        <button type="button" class="btn btn-outline-success curso-letra-btn" data-letra="A">A</button>
+                        <button type="button" class="btn btn-outline-success curso-letra-btn" data-letra="B">B</button>
+                        <button type="button" class="btn btn-outline-success curso-letra-btn" data-letra="C">C</button>
+                        <button type="button" class="btn btn-outline-success curso-letra-btn" data-letra="D">D</button>
+                    </div>
+                </div>
+
+                <!-- Preview del curso elegido -->
+                <div class="d-none mb-2" id="cursoPreview">
+                    Seleccionado: <span class="badge bg-primary" id="cursoPreviewText"></span>
+                    <button type="button" class="btn btn-sm btn-link text-danger" id="resetCurso">Cambiar</button>
+                </div>
+
+                <!-- Campo libre si elige "Otro" -->
+                <div class="d-none" id="cursoOtroPanel">
+                    <input type="text" id="cursoOtroInput" class="form-control" placeholder="Escribe el curso...">
+                </div>
+
+                <div th:if="${#fields.hasErrors('curso')}" class="text-danger small mt-1" th:errors="*{curso}"></div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" th:field="*{email}" class="form-control"
+                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{email}"></div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a th:href="@{/alumnos}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+</th:block>
+
+<!-- Scripts adicionales para esta página: lógica del selector de curso -->
+<th:block th:fragment="scripts">
+<script>
+    // Estado: número de curso seleccionado (ej: "1ºESO-")
+    let selectedNum = null;
+
+    const inputCurso   = document.getElementById('curso');
+    const letraPanel   = document.getElementById('letraPanel');
+    const preview      = document.getElementById('cursoPreview');
+    const previewText  = document.getElementById('cursoPreviewText');
+    const otroPanel    = document.getElementById('cursoOtroPanel');
+    const otroInput    = document.getElementById('cursoOtroInput');
+
+    // Si estamos editando, mostrar el curso actual en el preview
+    if (inputCurso.value) mostrarPreview(inputCurso.value);
+
+    // Click en botón de número (1ºESO, 2ºESO... o Otro)
+    document.querySelectorAll('.curso-num-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.curso-num-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const num = btn.dataset.num;
+            if (num === 'OTRO') {
+                selectedNum = null;
+                letraPanel.classList.add('d-none');
+                otroPanel.classList.remove('d-none');
+                preview.classList.add('d-none');
+                otroInput.focus();
+            } else {
+                selectedNum = num;
+                otroPanel.classList.add('d-none');
+                letraPanel.classList.remove('d-none');
+                preview.classList.add('d-none');
+                document.querySelectorAll('.curso-letra-btn').forEach(b => b.classList.remove('active'));
+            }
+        });
+    });
+
+    // Click en botón de letra (A, B, C, D) → combina número + letra
+    document.querySelectorAll('.curso-letra-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!selectedNum) return;
+            document.querySelectorAll('.curso-letra-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const cursoFinal = selectedNum + btn.dataset.letra;
+            inputCurso.value = cursoFinal;
+            mostrarPreview(cursoFinal);
+            letraPanel.classList.add('d-none');
+        });
+    });
+
+    // Campo libre: aplicar al perder foco o pulsar Enter
+    function aplicarOtro() {
+        const val = otroInput.value.trim();
+        if (val) { inputCurso.value = val; mostrarPreview(val); otroPanel.classList.add('d-none'); }
+    }
+    otroInput.addEventListener('blur', aplicarOtro);
+    otroInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); aplicarOtro(); }});
+
+    // Botón "Cambiar": resetea toda la selección
+    document.getElementById('resetCurso').addEventListener('click', () => {
+        selectedNum = null; inputCurso.value = '';
+        preview.classList.add('d-none'); letraPanel.classList.add('d-none');
+        otroPanel.classList.add('d-none'); otroInput.value = '';
+        document.querySelectorAll('.curso-num-btn, .curso-letra-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    function mostrarPreview(val) { previewText.textContent = val; preview.classList.remove('d-none'); }
+</script>
+</th:block>
+
+</body>
+</html>
