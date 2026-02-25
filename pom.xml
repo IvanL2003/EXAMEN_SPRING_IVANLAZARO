@@ -11,6 +11,8 @@
 	<groupId>com.example</groupId>
 	<artifactId>SpringBoot_Repaso</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<!-- WAR para despliegue en servidor externo (Tomcat, WildFly, etc.) -->
+	<packaging>war</packaging>
 	<name>Biblio</name>
 	<description>Proyecto Aura Reviews - CRUD de Clientes y Reviews con informes Chart.js</description>
 
@@ -23,6 +25,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Tomcat embebido marcado como "provided": se excluye del WAR
+		     porque el servidor externo (Tomcat/WildFly) ya lo proporciona -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- Spring Boot Data JPA -->

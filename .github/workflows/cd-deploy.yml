@@ -1,6 +1,6 @@
 # =====================================================================
 # CD Workflow - BiblioBox
-# Empaqueta el JAR ejecutable y crea releases.
+# Empaqueta el WAR para despliegue en servidor externo y crea releases.
 # Trigger: ejecución manual (workflow_dispatch) o PR merged a main
 # =====================================================================
 name: CD - Despliegue y Empaquetado
@@ -46,25 +46,25 @@ jobs:
       - name: Ejecutar tests de verificación
         run: mvn test --no-transfer-progress
 
-      # Paso 4: Empaquetar el proyecto en formato JAR ejecutable
+      # Paso 4: Empaquetar el proyecto en formato WAR
       # -DskipTests: los tests ya se ejecutaron en el paso anterior
-      - name: Empaquetar proyecto en JAR
+      - name: Empaquetar proyecto en WAR
         run: mvn clean package -DskipTests --no-transfer-progress
 
-      # Paso 5: Verificar que el archivo JAR fue generado correctamente
-      - name: Verificar generacion del artefacto JAR
+      # Paso 5: Verificar que el archivo WAR fue generado correctamente
+      - name: Verificar generacion del artefacto WAR
         run: |
           echo "Archivos generados en target/:"
-          ls -lh target/*.jar
+          ls -lh target/*.war
           echo "Verificacion completada exitosamente"
 
-      # Paso 6: Subir el JAR como artefacto de GitHub Actions
+      # Paso 6: Subir el WAR como artefacto de GitHub Actions
       # (disponible para descarga durante 30 dias)
-      - name: Subir artefacto JAR
+      - name: Subir artefacto WAR
         uses: actions/upload-artifact@v4
         with:
-          name: bibliobox-jar
-          path: target/*.jar
+          name: bibliobox-war
+          path: target/*.war
           retention-days: 30
 
       # Paso 7: Crear Release en GitHub (solo en ejecucion manual con entorno produccion)
@@ -87,10 +87,10 @@ jobs:
             Ver commits desde la ultima release para detalles de cambios.
 
             ### Instrucciones de despliegue
-            1. Descargar el archivo JAR adjunto
-            2. Ejecutar: java -jar bibliobox-*.jar
-            3. La aplicacion arranca en http://localhost:8080
-          files: target/*.jar
+            1. Descargar el archivo WAR adjunto
+            2. Copiar a la carpeta webapps/ de Tomcat
+            3. Reiniciar Tomcat si es necesario
+          files: target/*.war
           draft: false
           prerelease: ${{ github.event.inputs.environment != 'production' }}
         env:
