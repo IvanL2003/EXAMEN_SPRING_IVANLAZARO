@@ -1,0 +1,56 @@
+# CD - Entrega Continua (Release)
+# Este workflow se ejecuta tras la finalizacion exitosa del workflow de CI
+# y cuando se genera un tag en el repositorio.
+# Su funcion es crear una release del proyecto con el artefacto JAR generado.
+
+name: CD - Release
+
+# Se activa cuando el workflow de CI finaliza correctamente
+# y ademas se ha creado un tag con formato de version (ej: v1.0.0)
+on:
+  workflow_run:
+    workflows: ["CI - Tests"]
+    types:
+      - completed
+
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    # Solo se ejecuta si el workflow de CI fue exitoso o si se creo un tag
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    # Permisos necesarios para crear releases y subir assets
+    permissions:
+      contents: write
+
+    steps:
+      # Paso 1: Descarga el codigo fuente del repositorio
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      # Paso 2: Configura Java 21 con la distribucion Temurin
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Paso 3: Empaqueta el proyecto saltando los tests (ya se ejecutaron en CI)
+      # mvn package -DskipTests genera el JAR sin volver a ejecutar los tests
+      - name: Empaquetar proyecto
+        run: mvn package -DskipTests
+
+      # Paso 4: Crear la release en GitHub con el artefacto JAR generado
+      # Se utiliza softprops/action-gh-release para crear la release
+      # y adjuntar el archivo JAR como artefacto descargable
+      - name: Crear Release en GitHub
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: target/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

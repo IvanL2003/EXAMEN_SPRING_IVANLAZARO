@@ -1,53 +1,44 @@
-# =====================================================================
-# CI Workflow - BiblioBox
-# Ejecuta compilación y tests en cada push y pull request a main/develop
-# =====================================================================
-name: CI - Compilar y Ejecutar Tests
+# CI - Integracion Continua
+# Este workflow se activa cuando un desarrollador sube codigo a la rama dev.
+# Su funcion es validar que el proyecto compila correctamente y que los tests pasan.
 
-# Trigger: se ejecuta en push y PR a las ramas principales
+name: CI - Tests
+
+# Se activa con cada push a la rama dev
 on:
   push:
     branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
+      - dev
 
 jobs:
-  build-and-test:
-    name: Compilar y Testear
-    # Ejecutar en Ubuntu (más rápido y estable que Windows)
-    runs-on: ubuntu-latest
+  test:
+    # Se ejecuta en Windows y macOS para comprobar compatibilidad multiplataforma
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    # Define el sistema operativo del runner segun la matriz
+    runs-on: ${{ matrix.os }}
 
     steps:
-      # Paso 1: Clonar el repositorio con todo su historial
-      - name: Checkout del código fuente
+      # Paso 1: Descarga el codigo fuente del repositorio
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
-      # Paso 2: Configurar el entorno Java 21 (versión especificada en el proyecto)
+      # Paso 2: Configura Java 21 con la distribucion Temurin
       - name: Configurar JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'     # OpenJDK de Adoptium (gratuito y estable)
-          cache: maven                # Cache de dependencias Maven para acelerar builds
+          distribution: 'temurin'
 
-      # Paso 3: Compilar el proyecto sin ejecutar tests (verificación rápida de sintaxis)
-      - name: Compilar el proyecto con Maven
-        run: mvn clean compile --no-transfer-progress
+      # Paso 3: Limpieza total de la carpeta target para asegurar un build limpio
+      # mvn clean elimina todos los artefactos generados anteriormente
+      - name: Limpiar carpeta target
+        run: mvn clean
 
-      # Paso 4: Ejecutar todos los tests (unitarios, integración y E2E)
-      - name: Ejecutar tests con Maven
-        run: mvn test --no-transfer-progress
-
-      # Paso 5: Publicar resultados de los tests para visualización en GitHub
-      - name: Publicar resultados de tests
-        uses: dorny/test-reporter@v1
-        if: always()    # Ejecutar incluso si los tests fallan
-        with:
-          name: Resultados JUnit
-          path: target/surefire-reports/*.xml
-          reporter: java-junit
-          fail-on-error: false
+      # Paso 4: Ejecutar los tests del proyecto
+      # mvn test compila el codigo y ejecuta todos los tests unitarios y de integracion
+      # Los tests usan H2 en memoria gracias al perfil test
+      - name: Ejecutar tests
+        run: mvn test
