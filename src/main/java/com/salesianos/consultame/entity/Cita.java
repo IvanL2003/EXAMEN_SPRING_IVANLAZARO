@@ -1,6 +1,5 @@
 package com.salesianos.consultame.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -19,7 +18,6 @@ public class Cita {
     @Column(nullable = false, length = 100)
     private String paciente;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(nullable = false)
     private LocalDate fecha;
 

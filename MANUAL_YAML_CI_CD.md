@@ -297,10 +297,93 @@ git push origin v1.0.0
 
 ---
 
-## 10. Errores comunes
+## 10. Como generar un WAR en vez de un JAR
+
+Por defecto, Spring Boot genera un **JAR** ejecutable. Si necesitas desplegar en un servidor externo (Tomcat, WildFly, etc.), necesitas un **WAR**.
+
+### 10.1 Paso 1: Cambiar el packaging en pom.xml
+
+```xml
+<packaging>war</packaging>
+```
+
+### 10.2 Paso 2: Marcar el Tomcat embebido como "provided"
+
+Esto evita que el Tomcat de Spring Boot se empaquete dentro del WAR, ya que el servidor externo aporta el suyo:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-tomcat</artifactId>
+    <scope>provided</scope>
+</dependency>
+```
+
+### 10.3 Paso 3: Extender SpringBootServletInitializer
+
+Tu clase principal debe extender `SpringBootServletInitializer` para que el servidor externo pueda arrancar la aplicacion:
+
+```java
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+
+@SpringBootApplication
+public class MiAplicacion extends SpringBootServletInitializer {
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(MiAplicacion.class);
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(MiAplicacion.class, args);
+    }
+}
+```
+
+### 10.4 Paso 4: Generar el WAR
+
+```bash
+mvn clean package -DskipTests
+```
+
+El archivo `.war` se genera en la carpeta `target/`.
+
+### 10.5 Adaptar el YAML de CD para WAR
+
+Si tu workflow de CD generaba una release con JAR, cambia el patron de archivos:
+
+```yaml
+      - name: Crear Release en GitHub
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: target/*.war    # <-- Cambiado de *.jar a *.war
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### 10.6 Diferencias JAR vs WAR
+
+| Aspecto | JAR | WAR |
+|---|---|---|
+| **Packaging en pom.xml** | `<packaging>jar</packaging>` | `<packaging>war</packaging>` |
+| **Tomcat** | Embebido (incluido dentro) | Proporcionado por el servidor externo |
+| **Ejecucion** | `java -jar app.jar` | Copiar a `webapps/` del servidor |
+| **SpringBootServletInitializer** | No necesario | Obligatorio |
+| **Dependencia Tomcat** | Scope por defecto (compile) | `<scope>provided</scope>` |
+
+> **NOTA:** Un WAR generado con Spring Boot tambien se puede ejecutar con `java -jar app.war` si mantienes el `main()`. Es decir, funciona en ambos modos.
+
+---
+
+## 11. Errores comunes
 
 1. **El YAML no se detecta**: Asegurate de que esta en `.github/workflows/`, no en otra carpeta.
 2. **Error de indentacion**: YAML usa espacios (NO tabs). Cada nivel son 2 espacios.
 3. **El nombre del workflow no coincide**: En `workflow_run.workflows`, el nombre debe ser **exactamente** igual al `name:` del otro workflow.
 4. **Falta permisos**: Para crear releases necesitas `permissions: contents: write`.
 5. **El tag no dispara el workflow**: Asegurate de hacer `git push origin <tag>`, no solo `git tag`.
+6. **Release con JAR cuando deberia ser WAR**: Revisa que el patron en `files:` coincide con tu packaging (`target/*.jar` o `target/*.war`).
